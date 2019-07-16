@@ -47,8 +47,13 @@ func cloneRun(cmd *cobra.Command, args []string) {
 
 	var addresses []*url.URL
 	if u.Hostname() == viper.GetString("gitlab_url") {
+		protocol := "http"
+		if viper.GetBool("gitlab_https") {
+			protocol = "https"
+		}
+
 		gl := gitlab.NewClient(nil, viper.GetString("gitlab_token"))
-		gl.SetBaseURL("http://" + viper.GetString("gitlab_url") + "/api/v4")
+		gl.SetBaseURL(protocol + "://" + viper.GetString("gitlab_url") + "/api/v4")
 		allProjects, _, err := gl.Projects.ListProjects(&gitlab.ListProjectsOptions{Archived: gitlab.Bool(false)})
 		if err != nil {
 			fmt.Println(err)
@@ -96,18 +101,16 @@ func cloneRun(cmd *cobra.Command, args []string) {
 }
 
 func cloneProject(u *url.URL, wg *sync.WaitGroup) {
-	projectsPath := viper.GetString("projects_path")
-
-	clonePath := path.Join(projectsPath, u.Hostname(), u.Path)
+	clonePath := path.Join(ProjectsPath, u.Hostname(), u.Path)
 	if dotGit.MatchString(u.Path) {
 		clonePath = clonePath[:len(clonePath)-4]
 	}
 
 	fmt.Printf("%s: cloning into %s.\n", u, clonePath)
 
-	sshKey, err := ioutil.ReadFile(path.Join(Home, ".ssh", "id_rsa"))
+	sshKey, err := ioutil.ReadFile(path.Join(home, ".ssh", "id_rsa"))
 	signer, err := ssh.ParsePrivateKey([]byte(sshKey))
-	_, err = git.PlainClone(clonePath, viper.GetBool("projects_path"), &git.CloneOptions{
+	_, err = git.PlainClone(clonePath, viper.GetBool("bare"), &git.CloneOptions{
 		URL:  u.String(),
 		Auth: &gitssh.PublicKeys{User: u.User.Username(), Signer: signer},
 	})

@@ -1,4 +1,7 @@
 package cmd
 
-// Home of the user (~, $HOME)
-var Home string
+// ProjectsPath where is located all projects
+var ProjectsPath string
+
+var home string
+var config string
