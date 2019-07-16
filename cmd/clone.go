@@ -6,10 +6,13 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
+	"sync"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/xanzy/go-gitlab"
 	"golang.org/x/crypto/ssh"
 	"gopkg.in/src-d/go-git.v4"
 	gittransport "gopkg.in/src-d/go-git.v4/plumbing/transport"
@@ -20,20 +23,15 @@ var dotGit = regexp.MustCompile(`.git$`)
 
 var cloneCmd = &cobra.Command{
 	Use:   "clone",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "The `git clone` command with power-ups.",
+	Long: `To clone git projects into projects path.
+It will create the path as $PROJECTS_PATH/HOST/…/GROUPS/PROJECT.`,
 	Run: cloneRun,
 }
 
 func cloneRun(cmd *cobra.Command, args []string) {
 	var u *url.URL
 	var err error
-	projectsPath := viper.GetString("projects_path")
 
 	commonURL, err := gittransport.NewEndpoint(args[0])
 	if err != nil {
@@ -47,24 +45,80 @@ func cloneRun(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	var addresses []*url.URL
+	if u.Hostname() == viper.GetString("gitlab_url") {
+		gl := gitlab.NewClient(nil, viper.GetString("gitlab_token"))
+		gl.SetBaseURL("http://" + viper.GetString("gitlab_url") + "/api/v4")
+		allProjects, _, err := gl.Projects.ListProjects(&gitlab.ListProjectsOptions{Archived: gitlab.Bool(false)})
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		for _, project := range allProjects {
+			subprojectPath := path.Join("/", project.PathWithNamespace)
+
+			rel, err := filepath.Rel(u.Path, subprojectPath)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			if len(rel) > 2 && rel[0:2] == ".." { // is not a subdirectory (subgroup)
+				continue
+			}
+
+			address := new(url.URL)
+			address.Scheme = u.Scheme
+			address.Opaque = u.Opaque
+			address.User = u.User
+			address.Host = u.Host
+			address.Path = subprojectPath
+			address.RawPath = u.RawPath
+			address.ForceQuery = u.ForceQuery
+			address.RawQuery = u.RawQuery
+			address.Fragment = u.Fragment
+
+			addresses = append(addresses, address)
+		}
+	}
+
+	if len(addresses) == 0 {
+		addresses = append(addresses, u)
+	}
+
+	var wg sync.WaitGroup
+	for _, project := range addresses {
+		wg.Add(1)
+		go cloneProject(project, &wg)
+	}
+	wg.Wait()
+}
+
+func cloneProject(u *url.URL, wg *sync.WaitGroup) {
+	projectsPath := viper.GetString("projects_path")
+
 	clonePath := path.Join(projectsPath, u.Hostname(), u.Path)
 	if dotGit.MatchString(u.Path) {
 		clonePath = clonePath[:len(clonePath)-4]
 	}
 
+	fmt.Printf("%s: cloning into %s.\n", u, clonePath)
+
 	sshKey, err := ioutil.ReadFile(path.Join(Home, ".ssh", "id_rsa"))
 	signer, err := ssh.ParsePrivateKey([]byte(sshKey))
-
 	_, err = git.PlainClone(clonePath, viper.GetBool("projects_path"), &git.CloneOptions{
-		URL:      args[0],
-		Auth:     &gitssh.PublicKeys{User: "git", Signer: signer},
-		Progress: os.Stdout,
+		URL:  u.String(),
+		Auth: &gitssh.PublicKeys{User: u.User.Username(), Signer: signer},
 	})
 
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	if err == nil {
+		fmt.Printf("%s: completed.\n", u)
+	} else {
+		fmt.Printf("%s: %s\n", u, err)
 	}
+
+	wg.Done()
 }
 
 func init() {
