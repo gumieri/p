@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/url"
-	"os"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -34,16 +32,10 @@ func cloneRun(cmd *cobra.Command, args []string) {
 	var err error
 
 	commonURL, err := gittransport.NewEndpoint(args[0])
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	typist.Must(err)
 
 	u, err = url.Parse(commonURL.String())
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	typist.Must(err)
 
 	var addresses []*url.URL
 	if u.Hostname() == viper.GetString("gitlab_url") {
@@ -55,19 +47,13 @@ func cloneRun(cmd *cobra.Command, args []string) {
 		gl := gitlab.NewClient(nil, viper.GetString("gitlab_token"))
 		gl.SetBaseURL(protocol + "://" + viper.GetString("gitlab_url") + "/api/v4")
 		allProjects, _, err := gl.Projects.ListProjects(&gitlab.ListProjectsOptions{Archived: gitlab.Bool(false)})
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		typist.Must(err)
 
 		for _, project := range allProjects {
 			subprojectPath := path.Join("/", project.PathWithNamespace)
 
 			rel, err := filepath.Rel(u.Path, subprojectPath)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+			typist.Must(err)
 
 			if len(rel) > 2 && rel[0:2] == ".." { // is not a subdirectory (subgroup)
 				continue
@@ -101,12 +87,12 @@ func cloneRun(cmd *cobra.Command, args []string) {
 }
 
 func cloneProject(u *url.URL, wg *sync.WaitGroup) {
-	clonePath := path.Join(ProjectsPath, u.Hostname(), u.Path)
+	clonePath := path.Join(viper.GetString("projects_path"), u.Hostname(), u.Path)
 	if dotGit.MatchString(u.Path) {
 		clonePath = clonePath[:len(clonePath)-4]
 	}
 
-	fmt.Printf("%s: cloning into %s.\n", u, clonePath)
+	typist.Printf("%s: cloning into %s.\n", u, clonePath)
 
 	sshKey, err := ioutil.ReadFile(path.Join(home, ".ssh", "id_rsa"))
 	signer, err := ssh.ParsePrivateKey([]byte(sshKey))
@@ -116,9 +102,9 @@ func cloneProject(u *url.URL, wg *sync.WaitGroup) {
 	})
 
 	if err == nil {
-		fmt.Printf("%s: completed.\n", u)
+		typist.Printf("%s: completed.\n", u)
 	} else {
-		fmt.Printf("%s: %s\n", u, err)
+		typist.Printf("%s: %s\n", u, err)
 	}
 
 	wg.Done()

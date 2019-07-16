@@ -1,7 +1,11 @@
 package cmd
 
-// ProjectsPath where is located all projects
-var ProjectsPath string
+import typistPkg "github.com/gumieri/typist"
+
+// Version of the `p`
+var Version string
 
 var home string
-var config string
+var yes bool
+var quiet bool
+var typist *typistPkg.Typist
