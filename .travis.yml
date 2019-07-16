@@ -14,6 +14,7 @@ deploy:
   provider: releases
   api_key:
     secure: D+YAz6N+0Hq0OVRgISMf0ELYlljwxuIVkXi9utEGLeCoBh6mFasKJMXz4CW2bs2IY5TeeMAGiYODjIdkt5sNyR6GXimzEoSlrPuz9E9Iu9xxumOIFc2jSqBSJjHu20JXR4adsydl+COiVtT2mDGwv6Vwe6y+2s657nUG66NBNz9XySKCPF+1DrG60/u1nCkCXLHO+Xax8SYKn1PaTBxi8j4KRc3vN00IeDkNT2zOK0oKYCaY1RZEpp79Pl1868AnIg9jOhK0QpQlcrcQBkUCPBDxRBTkbsz24FsoZ0Nz++2tMp7kHHq/YBkr6/8k0JbTNgyo4G5Vq6VUTDppQ9AsDDcVSGxAaFU9eu6bpXhm3Fe5QC8dHTuDziMH9Iv9ylG6h4o+fykVw1Ah4fhJnDMdBin+qM8A5Vtku1tGzgAsFdkK4eo7fupLzCr531+hJ/Jkt+59km0ng15ob9JZl+kAqYQa8a09qQG5IaKW0ze7BtPXoKA4/j/d6lhv7Z3iB1KD9RRhlTJh8MO+2v9PRvF8iFA0TbqO+zufsbuf7zTXqrfv8bRCqFVk/qr84gcehNhba0SHgyUmHGM42vXxYP04fuh3/UHVI5VcgICvu3zG+Sz3gbDNsR6h9x8P9rRpovFQUkIMnXMJ/2ZzlNoydTWv1FRLoWnqqCQLof+4/Ycmzgs=
+  skip_cleanup: true
   file:
     - release/p-Linux-x86_64
     - release/p-Linux-i386
@@ -25,3 +26,4 @@ deploy:
     - release/p-Darwin-i386
   on:
     repo: gumieri/p
+    tags: true
