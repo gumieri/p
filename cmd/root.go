@@ -32,6 +32,10 @@ func rootRun(cmd *cobra.Command, args []string) {
 	projectsPath := viper.GetString("projects_path")
 
 	typist.Must(filepath.Walk(projectsPath, func(cwd string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
 		if info.IsDir() {
 			if _, err := os.Stat(path.Join(cwd, ".git")); !os.IsNotExist(err) {
 				typist.Println(cwd[len(projectsPath)+1:])
@@ -96,5 +100,5 @@ func initConfig() {
 
 	viper.AutomaticEnv()
 
-	typist.Must(viper.ReadInConfig())
+	viper.ReadInConfig()
 }
