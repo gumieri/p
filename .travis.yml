@@ -1,15 +1,8 @@
 language: go
 go:
-- 1.x
+  - 1.x
 script:
-- GOOS=linux  GOARCH=amd64       go build -ldflags "-X github.com/gumieri/p/cmd.Version=${TRAVIS_TAG}" -o release/p-Linux-x86_64 
-- GOOS=linux  GOARCH=386         go build -ldflags "-X github.com/gumieri/p/cmd.Version=${TRAVIS_TAG}" -o release/p-Linux-i386
-- GOOS=linux  GOARCH=arm GOARM=5 go build -ldflags "-X github.com/gumieri/p/cmd.Version=${TRAVIS_TAG}" -o release/p-Linux-armv5l
-- GOOS=linux  GOARCH=arm GOARM=6 go build -ldflags "-X github.com/gumieri/p/cmd.Version=${TRAVIS_TAG}" -o release/p-Linux-armv6l
-- GOOS=linux  GOARCH=arm GOARM=7 go build -ldflags "-X github.com/gumieri/p/cmd.Version=${TRAVIS_TAG}" -o release/p-Linux-armv7l
-- GOOS=linux  GOARCH=arm64       go build -ldflags "-X github.com/gumieri/p/cmd.Version=${TRAVIS_TAG}" -o release/p-Linux-armv8l
-- GOOS=darwin GOARCH=amd64       go build -ldflags "-X github.com/gumieri/p/cmd.Version=${TRAVIS_TAG}" -o release/p-Darwin-x86_64
-- GOOS=darwin GOARCH=386         go build -ldflags "-X github.com/gumieri/p/cmd.Version=${TRAVIS_TAG}" -o release/p-Darwin-i386
+  - PROJECT_VERSION=$TRAVIS_TAG make build-all
 deploy:
   provider: releases
   api_key:
