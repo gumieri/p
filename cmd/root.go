@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -32,6 +34,19 @@ func GetProjects(projectsPath string) (projects []string, err error) {
 
 func rootRun(cmd *cobra.Command, args []string) {
 	projectsPath := viper.GetString("projects_path")
+	projects := ""
+
+	cache := ""
+	useCache := !viper.GetBool("no-cache")
+	cachePath := path.Join(xdg.CacheHome, "p")
+	cacheFilePath := path.Join(cachePath, "projects")
+
+	if useCache {
+		cacheB, err := ioutil.ReadFile(cacheFilePath)
+		t.Must(err)
+		cache = string(cacheB)
+		t.Outln(cache)
+	}
 
 	t.Must(filepath.Walk(projectsPath, func(cwd string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -40,12 +55,20 @@ func rootRun(cmd *cobra.Command, args []string) {
 
 		if info.IsDir() {
 			if _, err := os.Stat(path.Join(cwd, ".git")); !os.IsNotExist(err) {
-				t.Outln(cwd[len(projectsPath)+1:])
+				project := cwd[len(projectsPath)+1:]
+				projects += "\n" + project
+				if !useCache || !strings.Contains(cache, project) {
+					t.Outln(project)
+				}
+
 				return filepath.SkipDir
 			}
 		}
 		return nil
 	}))
+
+	os.MkdirAll(cachePath, 0700)
+	ioutil.WriteFile(cacheFilePath, []byte(projects), 0600)
 }
 
 func persistentPreRun(cmd *cobra.Command, args []string) {
@@ -69,15 +92,21 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().String("config", "", "config file (default is $HOME/.p.yaml or $XDG_CONFIG_HOME/p/config.yaml)")
-	rootCmd.PersistentFlags().String("projects_path", "", "The root path of all projects")
-	rootCmd.PersistentFlags().String("gitlab_url", "", "Base URL for the Gitlab API")
-	rootCmd.PersistentFlags().String("gitlab_token", "", "User's token for consuming the Gitlab API")
-	rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "Disable standard data output")
+	rootCmd.Flags().Bool("no-cache", false, "perform the search with no cache data")
+	viper.BindPFlag("no-cache", rootCmd.Flags().Lookup("no-cache"))
 
+	rootCmd.PersistentFlags().String("config", "", "config file (default is $HOME/.p.yaml or $XDG_CONFIG_HOME/p/config.yaml)")
+
+	rootCmd.PersistentFlags().String("projects_path", "", "The root path of all projects")
 	viper.BindPFlag("projects_path", rootCmd.PersistentFlags().Lookup("projects_path"))
+
+	rootCmd.PersistentFlags().String("gitlab_url", "", "Base URL for the Gitlab API")
 	viper.BindPFlag("gitlab_url", rootCmd.PersistentFlags().Lookup("gitlab_url"))
+
+	rootCmd.PersistentFlags().String("gitlab_token", "", "User's token for consuming the Gitlab API")
 	viper.BindPFlag("gitlab_token", rootCmd.PersistentFlags().Lookup("gitlab_token"))
+
+	rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "Disable standard data output")
 	viper.BindPFlag("quiet", rootCmd.PersistentFlags().Lookup("quiet"))
 }
 
