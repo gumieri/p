@@ -6,7 +6,7 @@ require (
 	github.com/adrg/xdg v0.0.0-20190319220657-88e5137d2444
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/google/go-github v17.0.0+incompatible
-	github.com/gumieri/typist v0.1.0
+	github.com/gumieri/typist v1.3.1
 	github.com/hashicorp/go-version v1.2.0
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect

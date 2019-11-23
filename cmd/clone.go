@@ -32,10 +32,10 @@ func cloneRun(cmd *cobra.Command, args []string) {
 	var err error
 
 	commonURL, err := gittransport.NewEndpoint(args[0])
-	typist.Must(err)
+	t.Must(err)
 
 	u, err = url.Parse(commonURL.String())
-	typist.Must(err)
+	t.Must(err)
 
 	var addresses []*url.URL
 	if u.Hostname() == viper.GetString("gitlab_url") {
@@ -47,13 +47,13 @@ func cloneRun(cmd *cobra.Command, args []string) {
 		gl := gitlab.NewClient(nil, viper.GetString("gitlab_token"))
 		gl.SetBaseURL(protocol + "://" + viper.GetString("gitlab_url") + "/api/v4")
 		allProjects, _, err := gl.Projects.ListProjects(&gitlab.ListProjectsOptions{Archived: gitlab.Bool(false)})
-		typist.Must(err)
+		t.Must(err)
 
 		for _, project := range allProjects {
 			subprojectPath := path.Join("/", project.PathWithNamespace)
 
 			rel, err := filepath.Rel(u.Path, subprojectPath)
-			typist.Must(err)
+			t.Must(err)
 
 			if len(rel) > 2 && rel[0:2] == ".." { // is not a subdirectory (subgroup)
 				continue
@@ -92,7 +92,7 @@ func cloneProject(u *url.URL, wg *sync.WaitGroup) {
 		clonePath = clonePath[:len(clonePath)-4]
 	}
 
-	typist.Printf("%s: cloning into %s.\n", u, clonePath)
+	t.Infof("%s: cloning into %s.\n", u, clonePath)
 
 	sshKey, err := ioutil.ReadFile(path.Join(home, ".ssh", "id_rsa"))
 	signer, err := ssh.ParsePrivateKey([]byte(sshKey))
@@ -102,9 +102,9 @@ func cloneProject(u *url.URL, wg *sync.WaitGroup) {
 	})
 
 	if err == nil {
-		typist.Printf("%s: completed.\n", u)
+		t.Infof("%s: completed.\n", u)
 	} else {
-		typist.Printf("%s: %s\n", u, err)
+		t.Errorf("%s: %s\n", u, err)
 	}
 
 	wg.Done()

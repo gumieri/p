@@ -8,10 +8,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/adrg/xdg"
-	typistPkg "github.com/gumieri/typist"
+	"github.com/gumieri/typist"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
+
+var t = typist.New(&typist.Config{})
 
 // GetProjects already in the projects path
 func GetProjects(projectsPath string) (projects []string, err error) {
@@ -31,14 +33,14 @@ func GetProjects(projectsPath string) (projects []string, err error) {
 func rootRun(cmd *cobra.Command, args []string) {
 	projectsPath := viper.GetString("projects_path")
 
-	typist.Must(filepath.Walk(projectsPath, func(cwd string, info os.FileInfo, err error) error {
+	t.Must(filepath.Walk(projectsPath, func(cwd string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
 		if info.IsDir() {
 			if _, err := os.Stat(path.Join(cwd, ".git")); !os.IsNotExist(err) {
-				typist.Println(cwd[len(projectsPath)+1:])
+				t.Outln(cwd[len(projectsPath)+1:])
 				return filepath.SkipDir
 			}
 		}
@@ -47,11 +49,7 @@ func rootRun(cmd *cobra.Command, args []string) {
 }
 
 func persistentPreRun(cmd *cobra.Command, args []string) {
-	typist = &typistPkg.Typist{
-		Quiet: quiet,
-		In:    os.Stdin,
-		Out:   os.Stdout,
-	}
+	t.Config.Quiet = quiet
 }
 
 var rootCmd = &cobra.Command{
@@ -65,7 +63,7 @@ var rootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	typist.Must(rootCmd.Execute())
+	t.Must(rootCmd.Execute())
 }
 
 func init() {
@@ -89,7 +87,7 @@ func initConfig() {
 	config := viper.GetString("config")
 	if config == "" {
 		home, err = homedir.Dir()
-		typist.Must(err)
+		t.Must(err)
 
 		viper.SetConfigName("config")
 		viper.AddConfigPath(path.Join(home, ".p"))
