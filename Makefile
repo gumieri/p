@@ -1,5 +1,20 @@
 MODULE=github.com/gumieri/p
 GOBUILD=go build -ldflags "-X ${MODULE}/cmd.Version=${PROJECT_VERSION}"
+
+define RELEASE_BODY
+Go to the [README](https://github.com/gumieri/p/blob/${PROJECT_VERSION}/README.md) to know how to use it.
+If you are using Mac OS or Linux, you can install using the commands:
+```bash
+curl -L https://github.com/gumieri/p/releases/download/${PROJECT_VERSION}/p-`uname -s`-`uname -m` -o /usr/local/bin/p
+chmod +x /usr/local/bin/p
+```
+If you already have an older version installed, just run:
+```bash
+p upgrade
+```
+endef
+export RELEASE_BODY
+
 all: deps build
 deps:
 	go get ./...
@@ -7,6 +22,8 @@ build:
 	$(GOBUILD)
 install:
 	go install
+release-body:
+	echo "$$RELEASE_BODY" > RELEASE.md
 build-linux-64:
 	GOOS=linux \
 	GOARCH=amd64 \
@@ -38,8 +55,4 @@ build-macos-64:
 	GOOS=darwin \
 	GOARCH=amd64 \
 	$(GOBUILD) -o release/p-Darwin-x86_64
-build-macos-86:
-	GOOS=darwin \
-	GOARCH=386 \
-	$(GOBUILD) -o release/p-Darwin-i386
-build-all: build-linux-64 build-linux-86 build-linux-arm5 build-linux-arm6 build-linux-arm7 build-linux-arm8 build-macos-64 build-macos-86
+build-all: build-linux-64 build-linux-86 build-linux-arm5 build-linux-arm6 build-linux-arm7 build-linux-arm8 build-macos-64
