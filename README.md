@@ -48,11 +48,11 @@ $ p tag
 ```
 Creating new tags:
 ```
-$ git tag `p tag patch`
+$ p tag patch
 0.0.1
-$ git tag `p tag minor`
+$ p tag minor
 0.1.1
-$ git tag `p tag major`
+$ p tag major
 1.1.1
 ```
 It also has a shortcut to handle the higher (semantic ordered) tag:
@@ -62,4 +62,9 @@ $ p tag last
 $ p tag last --delete
 $ p tag last
 0.1.1
+```
+
+A simple combination:
+```
+$ p tag patch && git push origin `p tag last`
 ```
