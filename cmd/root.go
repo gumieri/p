@@ -32,6 +32,11 @@ func GetProjects(projectsPath string) (projects []string, err error) {
 	return
 }
 
+func fileOrDirExists(path string) bool {
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
+}
+
 func rootRun(cmd *cobra.Command, args []string) {
 	projectsPath := viper.GetString("projects_path")
 	projects := ""
@@ -42,6 +47,15 @@ func rootRun(cmd *cobra.Command, args []string) {
 	cacheFilePath := path.Join(cachePath, "projects")
 
 	if useCache {
+		if !fileOrDirExists(cachePath) {
+			os.MkdirAll(cachePath, 0700)
+		}
+
+		if !fileOrDirExists(cacheFilePath) {
+			_, err := os.Create(cacheFilePath)
+			t.Must(err)
+		}
+
 		cacheB, err := ioutil.ReadFile(cacheFilePath)
 		t.Must(err)
 		cache = string(cacheB)
@@ -54,7 +68,7 @@ func rootRun(cmd *cobra.Command, args []string) {
 		}
 
 		if info.IsDir() {
-			if _, err := os.Stat(path.Join(cwd, ".git")); !os.IsNotExist(err) {
+			if fileOrDirExists(path.Join(cwd, ".git")) {
 				project := cwd[len(projectsPath)+1:]
 				projects += "\n" + project
 				if !useCache || !strings.Contains(cache, project) {
@@ -67,8 +81,9 @@ func rootRun(cmd *cobra.Command, args []string) {
 		return nil
 	}))
 
-	os.MkdirAll(cachePath, 0700)
-	ioutil.WriteFile(cacheFilePath, []byte(projects), 0600)
+	if fileOrDirExists(cacheFilePath) {
+		ioutil.WriteFile(cacheFilePath, []byte(projects), 0600)
+	}
 }
 
 func persistentPreRun(cmd *cobra.Command, args []string) {
