@@ -20,13 +20,13 @@ List all projects into `$PROJECTS_PATH`
 
 ### `p clone`
 A `git clone` with power-ups.
-It will create the path as `$PROJECTS_PATH/HOST/…/GROUPS/PROJECT`. Ex.:
+It will create the path as `$PROJECTS_PATH/HOST/…/GROUPS/PROJECT`:
 ```
 $ p clone git@github.com:gumieri/p.git
 ssh://git@github.com/gumieri/p.git: cloning into /home/rafael@gumieri/Projects/github.com/gumieri/p.
 ssh://git@github.com/gumieri/p.git: completed.
 ```
-It is also able to clone multiple projects from gitlab groups and subgroups. Ex.:
+It is also able to clone multiple projects from gitlab groups and subgroups:
 ```
 $ p clone git@git.private.local:group/subgroup
 ssh://git@git.private.local:group/subgroup/project1.git: cloning into /home/rafael@gumieri/Projects/git.private.local/group/subgroup/project1.
@@ -35,4 +35,31 @@ ssh://git@git.private.local:group/subgroup/project1.git: completed.
 ssh://git@git.private.local:group/subgroup/project3.git: cloning into /home/rafael@gumieri/Projects/git.private.local/group/subgroup/project3.
 ssh://git@git.private.local:group/subgroup/project2.git: completed.
 ssh://git@git.private.local:group/subgroup/project3.git: completed.
+```
+
+### `p tag`
+To tag git projects with semantic versioning.
+It will respect if it has a `v` prefix or not.
+
+Listing all tags (semantic ordered):
+```
+$ p tag
+0.0.0
+```
+Creating new tags:
+```
+$ git tag `p tag patch`
+0.0.1
+$ git tag `p tag minor`
+0.1.1
+$ git tag `p tag major`
+1.1.1
+```
+It also has a shortcut to handle the higher (semantic ordered) tag:
+```
+$ p tag last
+1.1.1
+$ p tag last --delete
+$ p tag last
+0.1.1
 ```
