@@ -46,7 +46,7 @@ Listing all tags (semantic ordered):
 $ p tag
 0.0.0
 ```
-Creating new tags:
+Creating new tags, and pushing it:
 ```
 $ p tag patch
 0.0.1
@@ -54,6 +54,10 @@ $ p tag minor
 0.1.1
 $ p tag major
 1.1.1
+$ p tag patch --push
+1.1.2
+$ p tag major --remote elsewhere --push
+2.1.2
 ```
 It also has a shortcut to handle the higher (semantic ordered) tag:
 ```
