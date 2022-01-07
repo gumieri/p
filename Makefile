@@ -58,5 +58,5 @@ build-macos-64:
 build-macos-arm64:
 	GOOS=darwin \
 	GOARCH=arm64 \
-	$(GOBUILD) -o release/p-Darwin-arm-64
+	$(GOBUILD) -o release/p-Darwin-arm64
 build-all: build-linux-64 build-linux-86 build-linux-arm5 build-linux-arm6 build-linux-arm7 build-linux-arm8 build-macos-64 build-macos-arm64
