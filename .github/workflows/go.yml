@@ -34,4 +34,5 @@ jobs:
           release/p-Linux-armv8l
           release/p-Darwin-x86_64
           release/p-Darwin-i386
+          release/p-Darwin-arm64
         body_path: RELEASE.md
