@@ -38,9 +38,10 @@ func fileOrDirExists(path string) bool {
 }
 
 func rootRun(cmd *cobra.Command, args []string) {
-	projectsPath := viper.GetString("projects_path")
-	projects := ""
+	projectsPath, err := homedir.Expand(viper.GetString("projects_path"))
+	t.Must(err)
 
+	projects := ""
 	cache := ""
 	useCache := !viper.GetBool("no-cache")
 	cachePath := path.Join(xdg.CacheHome, "p")
@@ -112,7 +113,7 @@ func init() {
 
 	rootCmd.PersistentFlags().String("config", "", "config file (default is $HOME/.p.yaml or $XDG_CONFIG_HOME/p/config.yaml)")
 
-	rootCmd.PersistentFlags().String("projects_path", "", "The root path of all projects")
+	rootCmd.PersistentFlags().String("projects_path", "~/Projects", "The root path of all projects")
 	viper.BindPFlag("projects_path", rootCmd.PersistentFlags().Lookup("projects_path"))
 
 	rootCmd.PersistentFlags().String("gitlab_url", "", "Base URL for the Gitlab API")

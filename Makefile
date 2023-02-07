@@ -1,11 +1,11 @@
 MODULE=github.com/gumieri/p
-GOBUILD=go build -ldflags "-X ${MODULE}/cmd.Version=${PROJECT_VERSION}"
+GOBUILD=go build -ldflags "-X ${MODULE}/cmd.Version=${VERSION}"
 
 define RELEASE_BODY
-Go to the [README](https://github.com/gumieri/p/blob/${PROJECT_VERSION}/README.md) to know how to use it.
+Go to the [README](https://github.com/gumieri/p/blob/${VERSION}/README.md) to know how to use it.
 If you are using Mac OS or Linux, you can install using the commands:
 ```bash
-curl -L https://github.com/gumieri/p/releases/download/${PROJECT_VERSION}/p-`uname -s`-`uname -m` -o /usr/local/bin/p
+curl -L https://github.com/gumieri/p/releases/download/${VERSION}/p-`uname -s`-`uname -m` -o /usr/local/bin/p
 chmod +x /usr/local/bin/p
 ```
 If you already have an older version installed, just run:

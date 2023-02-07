@@ -15,10 +15,10 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.16
+        go-version: 1.19
 
     - name: Build
-      run: env PROJECT_VERSION=${GITHUB_REF/refs\/tags\//} make build-all release-body
+      run: env VERSION=${GITHUB_REF/refs\/tags\//} make build-all release-body
 
     - name: Release
       uses: softprops/action-gh-release@v1
