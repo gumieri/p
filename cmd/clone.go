@@ -44,8 +44,9 @@ func cloneRun(cmd *cobra.Command, args []string) {
 			protocol = "https"
 		}
 
-		gl := gitlab.NewClient(nil, viper.GetString("gitlab_token"))
-		gl.SetBaseURL(protocol + "://" + viper.GetString("gitlab_url") + "/api/v4")
+		gl, err := gitlab.NewClient(viper.GetString("gitlab_token"), gitlab.WithBaseURL(protocol+"://"+viper.GetString("gitlab_url")+"/api/v4"))
+		t.Must(err)
+
 		allProjects, _, err := gl.Projects.ListProjects(&gitlab.ListProjectsOptions{Archived: gitlab.Bool(false)})
 		t.Must(err)
 

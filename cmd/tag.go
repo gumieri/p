@@ -24,7 +24,7 @@ func getVersions(r *gogit.Repository) (versions []*version.Version, err error) {
 
 		version, err := version.NewVersion(raw)
 		if err != nil {
-			return err
+			return nil
 		}
 
 		versions = append(versions, version)
