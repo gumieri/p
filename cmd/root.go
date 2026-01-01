@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -17,12 +17,26 @@ import (
 
 var t = typist.New(&typist.Config{})
 
+// disableGC disables garbage collection for short-lived commands
+// This improves performance for commands that exit quickly
+func disableGC() {
+	debug.SetGCPercent(-1)
+}
+
 // GetProjects already in the projects path
 func GetProjects(projectsPath string) (projects []string, err error) {
+	projects = make([]string, 0, 100)
 	err = filepath.Walk(projectsPath, func(cwd string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if info.IsDir() {
 			if _, err := os.Stat(path.Join(cwd, ".git")); !os.IsNotExist(err) {
-				projects = append(projects, cwd[len(projectsPath)+1:])
+				rel, err := filepath.Rel(projectsPath, cwd)
+				if err != nil {
+					return err
+				}
+				projects = append(projects, rel)
 				return filepath.SkipDir
 			}
 		}
@@ -38,29 +52,36 @@ func fileOrDirExists(path string) bool {
 }
 
 func rootRun(cmd *cobra.Command, args []string) {
+	disableGC()
+
 	projectsPath, err := homedir.Expand(viper.GetString("projects_path"))
 	t.Must(err)
 
-	projects := ""
-	cache := ""
+	var projectsBuilder strings.Builder
+	var cacheMap map[string]bool
+	var existingCache string
 	useCache := !viper.GetBool("no-cache")
 	cachePath := path.Join(xdg.CacheHome, "p")
 	cacheFilePath := path.Join(cachePath, "projects")
 
 	if useCache {
 		if !fileOrDirExists(cachePath) {
-			os.MkdirAll(cachePath, 0700)
+			t.Must(os.MkdirAll(cachePath, 0700))
 		}
 
-		if !fileOrDirExists(cacheFilePath) {
-			_, err := os.Create(cacheFilePath)
+		cacheMap = make(map[string]bool)
+		if fileOrDirExists(cacheFilePath) {
+			cacheB, err := os.ReadFile(cacheFilePath)
 			t.Must(err)
+			existingCache = string(cacheB)
+			t.Outln(existingCache)
+			for _, line := range strings.Split(existingCache, "\n") {
+				line = strings.TrimSpace(line)
+				if line != "" {
+					cacheMap[line] = true
+				}
+			}
 		}
-
-		cacheB, err := ioutil.ReadFile(cacheFilePath)
-		t.Must(err)
-		cache = string(cacheB)
-		t.Outln(cache)
 	}
 
 	t.Must(filepath.Walk(projectsPath, func(cwd string, info os.FileInfo, err error) error {
@@ -70,9 +91,13 @@ func rootRun(cmd *cobra.Command, args []string) {
 
 		if info.IsDir() {
 			if fileOrDirExists(path.Join(cwd, ".git")) {
-				project := cwd[len(projectsPath)+1:]
-				projects += "\n" + project
-				if !useCache || !strings.Contains(cache, project) {
+				project, err := filepath.Rel(projectsPath, cwd)
+				if err != nil {
+					return err
+				}
+				projectsBuilder.WriteString("\n")
+				projectsBuilder.WriteString(project)
+				if !useCache || !cacheMap[project] {
 					t.Outln(project)
 				}
 
@@ -82,8 +107,11 @@ func rootRun(cmd *cobra.Command, args []string) {
 		return nil
 	}))
 
-	if fileOrDirExists(cacheFilePath) {
-		ioutil.WriteFile(cacheFilePath, []byte(projects), 0600)
+	if useCache && projectsBuilder.Len() > 0 {
+		projects := projectsBuilder.String()
+		if !fileOrDirExists(cacheFilePath) || existingCache != projects {
+			t.Must(os.WriteFile(cacheFilePath, []byte(projects), 0600))
+		}
 	}
 }
 

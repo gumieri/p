@@ -1,5 +1,5 @@
 MODULE=github.com/gumieri/p
-GOBUILD=go build -ldflags "-X ${MODULE}/cmd.Version=${VERSION}"
+GOBUILD=go build -ldflags "-s -w -X ${MODULE}/cmd.Version=${VERSION}" -trimpath
 
 define RELEASE_BODY
 Go to the [README](https://github.com/gumieri/p/blob/${VERSION}/README.md) to know how to use it.

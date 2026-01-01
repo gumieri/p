@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"io/ioutil"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -95,8 +95,10 @@ func cloneProject(u *url.URL, wg *sync.WaitGroup) {
 
 	t.Infof("%s: cloning into %s.\n", u, clonePath)
 
-	sshKey, err := ioutil.ReadFile(path.Join(home, ".ssh", "id_rsa"))
-	signer, err := ssh.ParsePrivateKey([]byte(sshKey))
+	sshKey, err := os.ReadFile(path.Join(home, ".ssh", "id_rsa"))
+	t.Must(err)
+	signer, err := ssh.ParsePrivateKey(sshKey)
+	t.Must(err)
 	_, err = git.PlainClone(clonePath, viper.GetBool("bare"), &git.CloneOptions{
 		URL:  u.String(),
 		Auth: &gitssh.PublicKeys{User: u.User.Username(), Signer: signer},

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -77,6 +78,8 @@ func increaseVersion(old *version.Version, segment Segment) (*version.Version, e
 }
 
 func createTag(segment Segment) {
+	debug.SetGCPercent(-1)
+
 	topPath, err := git.TopLevelPath()
 	t.Must(err)
 
@@ -109,6 +112,8 @@ var tagCmd = &cobra.Command{
 	Short: "The `git tag` command with power-ups.",
 	Long:  `To tag git projects with semantic versioning.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		debug.SetGCPercent(-1)
+
 		topPath, err := git.TopLevelPath()
 		t.Must(err)
 
@@ -152,6 +157,8 @@ var tagLastCmd = &cobra.Command{
 	Use:   "last",
 	Short: "get / manage the last version tag",
 	Run: func(cmd *cobra.Command, args []string) {
+		debug.SetGCPercent(-1)
+
 		topPath, err := git.TopLevelPath()
 		t.Must(err)
 
