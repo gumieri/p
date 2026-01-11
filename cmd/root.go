@@ -95,8 +95,8 @@ func rootRun(cmd *cobra.Command, args []string) {
 				if err != nil {
 					return err
 				}
-				projectsBuilder.WriteString("\n")
 				projectsBuilder.WriteString(project)
+				//projectsBuilder.WriteString("\n")
 				if !useCache || !cacheMap[project] {
 					t.Outln(project)
 				}
