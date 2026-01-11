@@ -72,3 +72,27 @@ A simple combination:
 ```
 $ p tag patch && git push origin `p tag last`
 ```
+
+## Zsh Integration
+
+For quick project navigation with `Ctrl+P`, you can load the included Zsh plugin.
+
+### Requirements
+- [fzf](https://github.com/junegunn/fzf) - Command-line fuzzy finder
+
+### Using Sheldon
+Add to your `~/.config/sheldon/plugins.toml`:
+```toml
+[plugins.p]
+github = "gumieri/p"
+dir = "zsh"
+```
+
+### Manual Installation
+Source the plugin in your `~/.zshrc`:
+```zsh
+source /path/to/p/zsh/p.plugin.zsh
+```
+
+### Usage
+Press `Ctrl+P` to open the project selector. Use fzf to filter and select a project, then press Enter to navigate to it.
