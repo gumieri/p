@@ -1,0 +1,13 @@
+src/
+pkg/
+
+*.pkg.tar.zst
+*.pkg.tar.xz
+*.pkg.tar.gz
+
+*.sig
+*.log
+
+.SRCINFO
+
+p-gumieri-git/
